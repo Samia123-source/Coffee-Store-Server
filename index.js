@@ -1,5 +1,5 @@
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '1.1.1.1']);
+// const dns = require('dns');
+// dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const express = require('express');
 const cors = require('cors');
@@ -9,11 +9,14 @@ const app = express();
 const port = process.env.PORT||5000;
 
 //middleware
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5174"
+  ]
+}));
 
-app.use(cors());
 app.use(express.json());
-
-
 
 // console.log(process.env.DB_USER)
 // console.log(process.env.DB_PASS)
@@ -106,12 +109,26 @@ async function run() {
       res.send(result);
     })
 
+    app.patch('/user', async(req, res) => {
+      const user = req.body;
+      const filter = {email: user.email}
+      const updateDoc = {
+        $set: {
+          lastLoggedAt: user.lastLoggedAt
+        }
+      }
+      const result = await userCollection.updateOne(filter, updateDoc )
+      res.send(result);
+
+    })
     app.delete('/user/:_id', async (req, res) => {
-      const id = req.params.id;
+      const id = req.params._id;
       const query = { _id: new ObjectId(id) }
       const result = await userCollection.deleteOne(query);
+      console.log("delete called");
       res.send(result);
     })
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
